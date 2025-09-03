@@ -3,8 +3,8 @@
 **В этом репозитории будет размещаться вся необходимая для обучения информация.**
 
 В курсе будут использоваться следующие СУБД:
- - PostgreSQL `rc1a-b58fi5jrta1cj7v5.mdb.yandexcloud.net`
- - ClickHouse `rc1a-o50ensnatr3md8b5.mdb.yandexcloud.net`
+ - PostgreSQL `host=rc1a-b58fi5jrta1cj7v5.mdb.yandexcloud.net, port=6432, database=teacher`
+ - ClickHouse `host=rc1a-o50ensnatr3md8b5.mdb.yandexcloud.net, port=8443, database=не указываем`
    
 В папках с названием `lessonN` будут размещаться материалы, которые были использованы во время занятия, а так же скрипты, которые были написаны преподавателем во время занятия.
 
