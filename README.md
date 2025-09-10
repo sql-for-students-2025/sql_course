@@ -4,7 +4,7 @@
 
 В курсе будут использоваться следующие СУБД:
  - PostgreSQL `host=rc1a-b58fi5jrta1cj7v5.mdb.yandexcloud.net, port=6432, database=teacher`
- - ClickHouse `host=rc1a-o50ensnatr3md8b5.mdb.yandexcloud.net, port=8443, database=не указываем`
+ - ClickHouse `host=rc1a-o50ensnatr3md8b5.mdb.yandexcloud.net, port=8443, database=не указываем`, обязательно прописываем путь к сертификатуRootCA.crt
    
 В папках с названием `lessonN` будут размещаться материалы, которые были использованы во время занятия, а так же скрипты, которые были написаны преподавателем во время занятия.
 
