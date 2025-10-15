@@ -1,0 +1,47 @@
+with trn as (
+	select
+		t.customer_id ,
+		t.cheque_sum ,
+		t.dt,
+		row_number() over(partition by t.customer_id, extract(month from t.dt) order by t.dt) as rn,
+		row_number() over(partition by t.customer_id order by t.dt) as rn2
+	from
+		public.transactions t
+	where
+		t.dt >= '2025-03-01'
+		and t.dt < '2025-05-01'
+)
+select
+	dt::date as dt,
+	count(1) as cnt_customers
+from
+	trn
+where
+	rn2 = 1
+group by
+	1
+order by
+	1
+	
+	
+with trn as (
+	select
+		t.customer_id ,
+		t.cheque_sum ,
+		t.dt::date as dt_trn,
+		row_number() over(partition by t.customer_id order by t.cheque_sum desc) rn,
+		sum(t.cheque_sum) over(partition by t.customer_id) as all_cheque_sum
+	from
+		public.transactions t 
+	/*where
+		t.customer_id = 1*/
+)
+select
+	extract(year from dt_trn)*100 + extract(month from dt_trn) as month_id,
+	round(avg(cheque_sum / all_cheque_sum), 3)*100 as ratio
+from
+	trn
+where
+	rn = 1
+group by
+	1
