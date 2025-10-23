@@ -1,0 +1,67 @@
+Каждому из вас необходимо скопировать к себе в схему следующие таблицы:
+
+public.transactions
+public.customers
+public.stores
+
+сделать это можно легко с помощью следующей команды:
+
+create table <имя вашей схемы (имяпользователя_sch)>.<имя_таблицы> as
+select * from public.<имя таблицы>;
+
+помните, что команда, представленная ниже, позволяет вывести план запроса и оценить его стоимость, которую можно найти
+в первой строке по ключевому слову COST:
+explain analyze 
+select 
+    column
+from table
+
+
+После копировани таблиц проанализируйте их содержимое и придумайте какие индексы можно использовать для ускорения следующих запросов:
+
+1. Поиск транзакций за определенный период с сортировкой по сумме
+SELECT t.id, t.dt, t.cheque_sum, c.first_name
+FROM transactions t
+JOIN customers c ON t.customer_id = c.id
+WHERE t.dt BETWEEN '2025-01-01' AND '2025-01-31'
+ORDER BY t.cheque_sum DESC;
+
+2. Поиск покупателей старше 60 лет
+SELECT id, first_name, last_name, birth_dt
+FROM customers
+WHERE birth_dt < '1964-01-01'
+ORDER BY birth_dt;
+
+3. Магазины, открытые в последние 2 года
+SELECT s.name, c.name as city_name, s.open_dt
+FROM stores s
+JOIN cities c ON s.city_id = c.id
+WHERE s.open_dt >= '2025-01-01'
+ORDER BY s.open_dt DESC;
+
+4. Транзакции с высокой суммой чека
+SELECT t.id, t.dt, t.cheque_sum, s.name as store_name
+FROM transactions t
+JOIN stores s ON t.store_id = s.id
+WHERE t.cheque_sum > 10000
+ORDER BY t.cheque_sum DESC;
+
+5. Поиск покупателя для отправки уведомления
+SELECT id, first_name, last_name, phone
+FROM customers
+WHERE email = 'ajakushev@example.org';
+
+6. Получение информации о конкретном магазине
+SELECT s.id, s.frmt, s.square, c.name as city_name
+FROM stores s
+JOIN cities c ON s.city_id = c.id
+WHERE s.name = 'Лаврентьев Лтд';
+
+7. Поиск покупателей с похожими именами
+SELECT id, first_name, last_name, email, phone
+FROM customers
+WHERE first_name ILIKE '%Алекс%' 
+   OR last_name ILIKE '%Смир%';
+
+
+Разбор ДЗ будет проводится на занятии и у каждого из Вас будет возможность поделиться тем, какой индекс наиболее уместен для каждого из запросов.
