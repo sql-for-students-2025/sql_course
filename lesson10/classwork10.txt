@@ -1,0 +1,127 @@
+select
+	(select count(1) from public.transactions) as table_cnt_elements,
+	pg_size_pretty(pg_relation_size('public.transactions')) as table_size,
+	pg_size_pretty(pg_indexes_size('public.transactions')) as indexes_size,
+	pg_size_pretty(pg_total_relation_size('public.transactions')) as tab_idx_size
+;
+
+explain analyze
+SELECT t.id, t.dt, t.cheque_sum, c.first_name
+FROM public.transactions t
+JOIN public.customers c ON t.customer_id = c.id
+WHERE t.dt BETWEEN '2025-01-01' AND '2025-01-31'
+ORDER BY t.cheque_sum DESC;
+
+create index idx_trans_cus_id on transactions using btree(customer_id);
+drop index idx_trans_cus_id;
+create index idx_trans_dt_id on transactions using btree(dt);
+drop index idx_trans_dt_id;
+
+explain analyze
+SELECT id, first_name, last_name, birth_dt
+FROM public.customers
+WHERE birth_dt < '1964-01-01'
+ORDER BY birth_dt
+;
+
+explain analyze
+SELECT s.name, c.name as city_name, s.open_dt
+FROM public.stores s
+JOIN public.cities c ON s.city_id = c.id
+WHERE s.open_dt >= '2025-01-01'
+ORDER BY s.open_dt desc
+;
+
+create index idx_stores_city_id on stores using hash(city_id);
+drop index idx_stores_city_id;
+
+explain analyze
+SELECT t.id, t.dt, t.cheque_sum, s.name as store_name
+FROM public.transactions t
+JOIN public.stores s ON t.store_id = s.id
+WHERE t.cheque_sum > 10000
+ORDER BY t.cheque_sum desc
+;
+
+create index idx_trans_store_id on transactions using hash(store_id);
+drop index idx_trans_store_id;
+create index idx_trans_sum_id on transactions using btree(cheque_sum);
+drop index idx_trans_sum_id;
+create index idx_stores_id on stores(id);
+drop index idx_stores_id;
+
+explain analyze
+SELECT id, first_name, last_name, phone, email
+FROM public.customers
+WHERE email in ('ajakushev@example.org', 'alevtina2008@example.net', 'avgustnosov@example.com', 'ippolit_1980@example.net')
+;
+
+create index idx_customer_email on customers(email);
+drop index idx_customer_email;
+
+explain analyze
+SELECT s.id, s.frmt, s.square, c.name as city_name
+FROM public.stores s
+JOIN public.cities c ON s.city_id = c.id
+WHERE s.name = 'Лаврентьев Лтд'
+;
+
+create index idx_store_name on stores using hash(name);
+drop index idx_store_name;
+
+
+explain analyze
+SELECT id, first_name, last_name, email, phone
+FROM public.customers
+WHERE (first_name ILIKE '%Алекс%' 
+   OR last_name ILIKE '%Смир%')
+   and birth_dt < '1980-01-01'
+;
+
+CREATE INDEX idx_cus_birth_first_last_name ON customers USING btree(birth_dt, id, first_name, last_name);
+drop index idx_cus_birth_first_last_name;
+
+explain analyze
+select
+	t.id,
+	t.cheque_sum ,
+	s.frmt
+from
+	(select id, frmt from public.stores where frmt = 2) s 
+join public.transactions t on
+	t.store_id = s.id
+;
+
+explain analyze
+select
+	t.id,
+	t.cheque_sum ,
+	s.frmt
+from
+	public.transactions t 
+join (select id, frmt from public.stores where frmt = 2) s on
+	t.store_id = s.id
+;
+
+
+explain analyze
+WITH age_data AS (
+    SELECT
+        id,
+        first_name,
+        DATE_PART('year', AGE(CURRENT_DATE, birth_dt)) AS age
+    FROM customers
+    WHERE birth_dt IS NOT NULL
+),
+stats AS (
+    SELECT first_name,
+      id,
+        age,
+        AVG(age) OVER (PARTITION BY first_name) AS avg_age,
+        STDDEV(age) OVER (PARTITION BY first_name) AS stddev_age
+    FROM age_data
+)
+SELECT COUNT(DISTINCT id) AS count_customers
+FROM stats
+WHERE age > (avg_age + stddev_age)
+;
