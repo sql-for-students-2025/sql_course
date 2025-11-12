@@ -1,0 +1,95 @@
+create or replace function test_sch.l11e3(customer int, date_beg date, date_end date)
+returns table (
+	transaction_id uuid,
+	transaction_date timestamp,
+	store_name varchar(100),
+	quantity int,
+	cheque_amount numeric(10,2)
+)
+language plpgsql
+as $$
+begin
+	return query
+		select
+			t.id,
+			t.dt,
+			s."name" ,
+			t.qnty ,
+			t.cheque_sum
+		from
+			public.transactions t
+		join public.stores s on
+			s.id = t.store_id 
+		where
+			t.customer_id = customer
+			and t.dt between date_beg and date_end + 1
+	;
+end;
+$$;
+
+select * from test_sch.l11e3(1, '2025-02-01', '2025-04-01')
+
+select * from skolotnevamd_sch.transactions t where customer_id = 1 and t.dt between '2025-02-01' and '2025-04-02'
+select * from public.stores where id = 62
+
+/*
+
+Необходимо разработать функцию PostgreSQL,
+которая вернет уникальные идентификаторы городов,
+в которых уникальное количество покупателей
+за последние Х месяцев без последних Y месяцев составляет от Z и больше.
+X, Y и Z - входящие параметры.
+
+*/
+
+select cast(cast(5 as text) || ' month' as interval);
+
+create or replace function test_sch.l12e6(X int, Y int, Z int)
+returns table(
+	city_id int
+)
+language plpgsql
+as $$
+declare
+	beg_interval interval;
+	end_interval interval;
+begin
+
+	beg_interval = cast(cast(X as text) || ' month' as interval);
+	end_interval = cast(cast(Y as text) || ' month' as interval);
+
+	return query
+		select
+			s.city_id 
+		from
+			public.transactions t 
+		join public.stores s on
+			s.id = t.store_id 
+		where
+			t.dt >= now() - beg_interval
+			and t.dt < now() - end_interval + interval '1' day
+		group by
+			s.city_id 
+		having 
+			count(distinct t.customer_id) >= Z
+		;
+	
+end;
+$$;
+
+select now()
+select * from test_sch.l12e6(7, 5, 60000)
+
+select
+			s.city_id 
+		from
+			public.transactions t 
+		join public.stores s on
+			s.id = t.store_id 
+		where
+			t.dt >= now() - interval '7' month
+			and t.dt < now() - interval '5' month + interval '1' day
+		group by
+			s.city_id 
+		having 
+			count(distinct t.customer_id) >= 60000
